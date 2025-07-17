@@ -2,121 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ACAAN Mnemonica Cut Helper</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Statistic</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 16px;
-      background: #f4f4f4;
-      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
     }
-    h2 {
-      color: #222;
-    }
-    label, select, input, button {
+    #app {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
       width: 100%;
-      max-width: 320px;
-      margin: 10px 0;
+    }
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
       font-size: 16px;
-      padding: 8px;
-      box-sizing: border-box;
     }
     button {
-      background-color: #007acc;
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 12px;
+      background: #0073e6;
       color: white;
       border: none;
+      border-radius: 4px;
       cursor: pointer;
     }
     button:hover {
-      background-color: #005fa3;
+      background: #005bb5;
     }
-    #result {
+    .result {
       margin-top: 20px;
       font-size: 18px;
-      font-weight: bold;
-      color: #006600;
+      color: #333;
     }
+    .emoji { font-size: 32px; display: block; margin: 10px 0; }
   </style>
 </head>
 <body>
+  <div id="app">
+    <div class="emoji">🃏</div>
+    <h2>Mnemonica Card Estimator</h2>
 
-<h2>ACAAN Mnemonica Cut Helper</h2>
+    <select id="bottomCard"></select>
+    <select id="targetCard"></select>
+    <input id="targetNumber" type="number" min="1" max="52" placeholder="Position 1–52" />
 
-<label for="bottomCard">Bottom Card (after spectator cut):</label>
-<select id="bottomCard"></select>
+    <button onclick="calculate()">Calculate</button>
 
-<label for="namedCard">Named Card:</label>
-<select id="namedCard"></select>
+    <div class="result" id="result"></div>
+  </div>
 
-<label for="namedNumber">Named Number (1–52):</label>
-<input type="number" id="namedNumber" min="1" max="52" value="30">
+  <script>
+    const mn = ["4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
+                "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
+                "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
+                "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
+                "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
+                "AH","9D"];
 
-<button onclick="calculateCut()">Calculate</button>
+    function mod(n,m) { return ((n % m) + m) % m; }
 
-<div id="result"></div>
+    function calculate() {
+      const bottom = document.getElementById("bottomCard").value;
+      const target = document.getElementById("targetCard").value;
+      const num = parseInt(document.getElementById("targetNumber").value);
+      const res = document.getElementById("result");
 
-<script>
-  const mnemonica = [
-    "4♣","2♥","7♦","3♣","4♥","6♦","A♠","5♥","9♠","2♠",
-    "Q♥","3♦","Q♣","8♥","6♠","5♠","9♥","K♣","2♦","J♥",
-    "3♠","8♠","6♥","10♣","5♦","K♦","2♣","3♥","8♦","5♣",
-    "K♠","J♦","8♣","10♠","K♥","J♣","7♠","10♥","A♦","4♠",
-    "7♥","4♦","A♣","9♣","J♠","Q♦","7♣","Q♠","10♦","6♣",
-    "A♥","9♦"
-  ];
-
-  const suitOrder = [
-    "A♦","2♦","3♦","4♦","5♦","6♦","7♦","8♦","9♦","10♦","J♦","Q♦","K♦",
-    "A♣","2♣","3♣","4♣","5♣","6♣","7♣","8♣","9♣","10♣","J♣","Q♣","K♣",
-    "A♥","2♥","3♥","4♥","5♥","6♥","7♥","8♥","9♥","10♥","J♥","Q♥","K♥",
-    "A♠","2♠","3♠","4♠","5♠","6♠","7♠","8♠","9♠","10♠","J♠","Q♠","K♠"
-  ];
-
-  function fillCardOptions() {
-    const bottomCardSelect = document.getElementById("bottomCard");
-    const namedCardSelect = document.getElementById("namedCard");
-
-    suitOrder.forEach(card => {
-      const option1 = new Option(card, card);
-      const option2 = new Option(card, card);
-      bottomCardSelect.add(option1);
-      namedCardSelect.add(option2);
-    });
-  }
-
-  function calculateCut() {
-    const bottomCard = document.getElementById("bottomCard").value;
-    const namedCard = document.getElementById("namedCard").value;
-    const namedNumber = parseInt(document.getElementById("namedNumber").value);
-
-    const bottomIndex = mnemonica.indexOf(bottomCard);
-    const namedIndex = mnemonica.indexOf(namedCard);
-
-    if (bottomIndex === -1 || namedIndex === -1) {
-      document.getElementById("result").innerText = "Invalid card selection.";
-      return;
+      if(!bottom || !target || isNaN(num) || num < 1 || num > 52) {
+        res.textContent = "Please enter all fields.";
+        return;
+      }
+      const bi = mn.indexOf(bottom) + 1;
+      const ti = mn.indexOf(target) + 1;
+      const cs = mod(52 - bi, 52);
+      const ds = mod(ti - num, 52);
+      const cut = mod(ds - cs, 52);
+      const cutCard = mn[(cut - 1 + 52) % 52];
+      res.innerHTML = `🔍 Cut <b>${cutCard}</b> to the bottom (position ${mn.indexOf(cutCard)+1}), by moving <b>${cut === 0 ? 0 : cut}</b> card(s).`;
     }
 
-    // Rotate the Mnemonica stack as per cut
-    const rotatedStack = [...mnemonica.slice(bottomIndex + 1), ...mnemonica.slice(0, bottomIndex + 1)];
-
-    // Find where the named card currently is
-    const currentPos = rotatedStack.indexOf(namedCard); // 0-based
-    const targetPos = namedNumber - 1;
-
-    // How many cards to move from top to bottom to place named card at target position
-    const neededCut = (currentPos - targetPos + 52) % 52;
-
-    const cutCardIndex = (neededCut - 1 + 52) % 52;
-    const cardToBottom = rotatedStack[cutCardIndex];
-
-    document.getElementById("result").innerText =
-      `Move "${cardToBottom}" (currently at position ${cutCardIndex + 1}) to the bottom to place "${namedCard}" at position ${namedNumber}.`;
-  }
-
-  fillCardOptions();
-</script>
-
+    function init() {
+      mn.forEach(card => {
+        ['bottomCard','targetCard'].forEach(id => {
+          const o = document.createElement('option');
+          o.value = card;
+          o.textContent = card;
+          document.getElementById(id).appendChild(o);
+        });
+      });
+    }
+    init();
+  </script>
 </body>
 </html>
