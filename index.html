@@ -2,108 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Card Statistic</title>
+  <title>Mnemonica - Any Card At Any Number</title>
   <style>
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
     }
-    #app {
-      background: white;
-      padding: 30px 40px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      text-align: center;
-      max-width: 400px;
+    label, select, input, button {
+      display: block;
+      margin: 10px 0;
       width: 100%;
-    }
-    select, input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      font-size: 16px;
-    }
-    button {
-      padding: 12px;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 12px;
-      background: #0073e6;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #005bb5;
     }
     .result {
       margin-top: 20px;
-      font-size: 18px;
-      color: #333;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
     }
-    .emoji { font-size: 32px; display: block; margin: 10px 0; }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div class="emoji">🃏</div>
-    <h2>Mnemonica Card Estimator</h2>
+  <h2>Mnemonica Any Card at Any Number Calculator</h2>
 
-    <select id="bottomCard"></select>
-    <select id="targetCard"></select>
-    <input id="targetNumber" type="number" min="1" max="52" placeholder="Position 1–52" />
+  <label for="bottomCard">Current Bottom Card:</label>
+  <select id="bottomCard"></select>
 
-    <button onclick="calculate()">Calculate</button>
+  <label for="targetCard">Named Card (to appear):</label>
+  <select id="targetCard"></select>
 
-    <div class="result" id="result"></div>
-  </div>
+  <label for="targetNumber">Named Position (1–52):</label>
+  <input type="number" id="targetNumber" min="1" max="52" />
+
+  <button onclick="calculateCut()">Calculate Cut</button>
+
+  <div class="result" id="result"></div>
 
   <script>
-    const mn = ["4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
-                "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
-                "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
-                "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
-                "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
-                "AH","9D"];
+    const mnemonica = [
+      "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
+      "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
+      "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
+      "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
+      "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
+      "AH","9D"
+    ];
 
-    function mod(n,m) { return ((n % m) + m) % m; }
-
-    function calculate() {
-      const bottom = document.getElementById("bottomCard").value;
-      const target = document.getElementById("targetCard").value;
-      const num = parseInt(document.getElementById("targetNumber").value);
-      const res = document.getElementById("result");
-
-      if(!bottom || !target || isNaN(num) || num < 1 || num > 52) {
-        res.textContent = "Please enter all fields.";
-        return;
-      }
-      const bi = mn.indexOf(bottom) + 1;
-      const ti = mn.indexOf(target) + 1;
-      const cs = mod(52 - bi, 52);
-      const ds = mod(ti - num, 52);
-      const cut = mod(ds - cs, 52);
-      const cutCard = mn[(cut - 1 + 52) % 52];
-      res.innerHTML = `🔍 Cut <b>${cutCard}</b> to the bottom (position ${mn.indexOf(cutCard)+1}), by moving <b>${cut === 0 ? 0 : cut}</b> card(s).`;
-    }
-
-    function init() {
-      mn.forEach(card => {
-        ['bottomCard','targetCard'].forEach(id => {
-          const o = document.createElement('option');
-          o.value = card;
-          o.textContent = card;
-          document.getElementById(id).appendChild(o);
-        });
+    function populateSelect(id) {
+      const sel = document.getElementById(id);
+      mnemonica.forEach(card => {
+        const opt = document.createElement("option");
+        opt.value = card;
+        opt.textContent = card;
+        sel.appendChild(opt);
       });
     }
-    init();
+
+    populateSelect("bottomCard");
+    populateSelect("targetCard");
+
+    function mod(n, m) {
+      return ((n % m) + m) % m;
+    }
+
+    function calculateCut() {
+      const bottomCard = document.getElementById("bottomCard").value;
+      const targetCard = document.getElementById("targetCard").value;
+      const targetNumber = parseInt(document.getElementById("targetNumber").value);
+      const result = document.getElementById("result");
+
+      const bottomIndex = mnemonica.indexOf(bottomCard) + 1; // 1-based
+      const targetIndex = mnemonica.indexOf(targetCard) + 1;
+
+      if (bottomIndex < 1 || targetIndex < 1 || isNaN(targetNumber) || targetNumber < 1 || targetNumber > 52) {
+        result.textContent = "Please enter valid inputs.";
+        return;
+      }
+
+      const currentShift = mod(52 - bottomIndex, 52);
+      const desiredShift = mod(targetIndex - targetNumber, 52);
+      const cardsToCut = mod(desiredShift - currentShift, 52);
+
+      const cardToCut = mnemonica[(cardsToCut - 1 + 52) % 52];
+      const cutPosition = (cardsToCut === 0) ? "(no cut needed)" : cardsToCut;
+
+      result.innerHTML = `To place <b>${targetCard}</b> at position <b>${targetNumber}</b>:<br>
+        ➤ Cut card <b>${cardToCut}</b> (position ${mnemonica.indexOf(cardToCut)+1}) to the bottom.<br>
+        ➤ Cut <b>${cutPosition}</b> card(s) from the top to the bottom.`;
+    }
   </script>
 </body>
 </html>
