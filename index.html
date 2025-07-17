@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AACAAN Calculator</title>
+  <title>Studying of card probabilities in specific positions</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-image: url('https://images.unsplash.com/photo-1581090700227-1e8a9f1c0888'); /* Change URL to your desired background */
+      background-image: url('https://images.unsplash.com/photo-1581090700227-1e8a9f1c0888');
       background-size: cover;
       background-attachment: fixed;
       color: #fff;
@@ -51,7 +51,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>AACAAN Calculator</h1>
+    <h1>Studying of card probabilities in specific positions</h1>
     <label for="bottomCard">Select Bottom Card:</label>
     <select id="bottomCard" onchange="hideBottomCard(this)"></select><br>
 
@@ -130,7 +130,6 @@
         `The probability of your card in that position is 0.${probability}% and only ${secretCode} out of 10000 people have named this combination.`;
     }
 
-    // Initialize card dropdowns
     fillCardSelect("bottomCard");
     fillCardSelect("namedCard");
   </script>
