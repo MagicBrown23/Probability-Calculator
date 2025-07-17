@@ -1,97 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Mnemonica - Any Card At Any Number</title>
+  <title>AACAAN Calculator</title>
   <style>
     body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
     }
-    label, select, input, button {
+    label {
       display: block;
-      margin: 10px 0;
-      width: 100%;
+      margin-top: 15px;
     }
-    .result {
+    select, input {
+      width: 100%;
+      padding: 8px;
+    }
+    button {
       margin-top: 20px;
       padding: 10px;
-      background-color: #f0f0f0;
-      border-radius: 5px;
+      width: 100%;
+      background: #333;
+      color: white;
+      border: none;
+      font-size: 16px;
+    }
+    .result {
+      margin-top: 25px;
+      font-weight: bold;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <h2>Mnemonica Any Card at Any Number Calculator</h2>
+  <h2>AACAAN - Aldo Any Card At Any Number</h2>
 
-  <label for="bottomCard">Current Bottom Card:</label>
+  <label>Bottom Card:</label>
   <select id="bottomCard"></select>
 
-  <label for="targetCard">Named Card (to appear):</label>
-  <select id="targetCard"></select>
+  <label>Named Card:</label>
+  <select id="namedCard"></select>
 
-  <label for="targetNumber">Named Position (1–52):</label>
-  <input type="number" id="targetNumber" min="1" max="52" />
+  <label>Named Number (1–52):</label>
+  <input type="number" id="namedNumber" min="1" max="52" />
 
-  <button onclick="calculateCut()">Calculate Cut</button>
+  <button onclick="calculate()">Calculate</button>
 
   <div class="result" id="result"></div>
 
   <script>
     const mnemonica = [
-      "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
-      "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
-      "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
-      "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
-      "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
-      "AH","9D"
+      "4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠",
+      "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥",
+      "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣",
+      "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠",
+      "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣",
+      "A♥", "9♦"
     ];
 
+    const cardOrder = (() => {
+      const suits = ['♦', '♣', '♥', '♠'];
+      const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+      let order = [];
+      for (let s of suits) {
+        for (let v of values) {
+          order.push(`${v}${s}`);
+        }
+      }
+      return order;
+    })();
+
+    // Populate dropdowns
     function populateSelect(id) {
-      const sel = document.getElementById(id);
-      mnemonica.forEach(card => {
-        const opt = document.createElement("option");
-        opt.value = card;
-        opt.textContent = card;
-        sel.appendChild(opt);
+      const select = document.getElementById(id);
+      cardOrder.forEach(card => {
+        const option = document.createElement("option");
+        option.value = card;
+        option.text = card;
+        select.appendChild(option);
       });
     }
 
     populateSelect("bottomCard");
-    populateSelect("targetCard");
+    populateSelect("namedCard");
 
-    function mod(n, m) {
-      return ((n % m) + m) % m;
-    }
+    function calculate() {
+      const bottom = document.getElementById("bottomCard").value;
+      const named = document.getElementById("namedCard").value;
+      const namedNum = parseInt(document.getElementById("namedNumber").value, 10);
 
-    function calculateCut() {
-      const bottomCard = document.getElementById("bottomCard").value;
-      const targetCard = document.getElementById("targetCard").value;
-      const targetNumber = parseInt(document.getElementById("targetNumber").value);
-      const result = document.getElementById("result");
+      const bottomPos = mnemonica.indexOf(bottom) + 1;
+      const namedPos = mnemonica.indexOf(named) + 1;
 
-      const bottomIndex = mnemonica.indexOf(bottomCard) + 1; // 1-based
-      const targetIndex = mnemonica.indexOf(targetCard) + 1;
-
-      if (bottomIndex < 1 || targetIndex < 1 || isNaN(targetNumber) || targetNumber < 1 || targetNumber > 52) {
-        result.textContent = "Please enter valid inputs.";
+      if (bottomPos === 0 || namedPos === 0 || isNaN(namedNum)) {
+        document.getElementById("result").innerText = "Please check your inputs.";
         return;
       }
 
-      const currentShift = mod(52 - bottomIndex, 52);
-      const desiredShift = mod(targetIndex - targetNumber, 52);
-      const cardsToCut = mod(desiredShift - currentShift, 52);
+      let raw = namedPos - namedNum;
+      if (raw <= 0) raw += 52;
+      const cutCard = mnemonica[raw - 1];
 
-      const cardToCut = mnemonica[(cardsToCut - 1 + 52) % 52];
-      const cutPosition = (cardsToCut === 0) ? "(no cut needed)" : cardsToCut;
+      let cutPos = raw - bottomPos;
+      if (cutPos <= 0) cutPos += 52;
 
-      result.innerHTML = `To place <b>${targetCard}</b> at position <b>${targetNumber}</b>:<br>
-        ➤ Cut card <b>${cardToCut}</b> (position ${mnemonica.indexOf(cardToCut)+1}) to the bottom.<br>
-        ➤ Cut <b>${cutPosition}</b> card(s) from the top to the bottom.`;
+      document.getElementById("result").innerText =
+        `Cut ${cutCard} (now at position ${cutPos}) to the bottom.`;
     }
   </script>
 </body>
