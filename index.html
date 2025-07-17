@@ -43,14 +43,14 @@
 
 <h2>ACAAN Mnemonica Cut Helper</h2>
 
-<label for="bottomCard">Bottom Card (after cut):</label>
+<label for="bottomCard">Bottom Card (after spectator cut):</label>
 <select id="bottomCard"></select>
 
 <label for="namedCard">Named Card:</label>
 <select id="namedCard"></select>
 
 <label for="namedNumber">Named Number (1–52):</label>
-<input type="number" id="namedNumber" min="1" max="52" value="20">
+<input type="number" id="namedNumber" min="1" max="52" value="30">
 
 <button onclick="calculateCut()">Calculate</button>
 
@@ -98,16 +98,21 @@
       return;
     }
 
-    // Rotate the stack based on bottom card (i.e. simulate spectator's cut)
+    // Rotate the Mnemonica stack as per cut
     const rotatedStack = [...mnemonica.slice(bottomIndex + 1), ...mnemonica.slice(0, bottomIndex + 1)];
 
-    const currentPos = rotatedStack.indexOf(namedCard);
-    const neededCut = (currentPos - (namedNumber - 1) + 52) % 52;
+    // Find where the named card currently is
+    const currentPos = rotatedStack.indexOf(namedCard); // 0-based
+    const targetPos = namedNumber - 1;
 
-    const cardToBottom = rotatedStack[(neededCut - 1 + 52) % 52];
+    // How many cards to move from top to bottom to place named card at target position
+    const neededCut = (currentPos - targetPos + 52) % 52;
+
+    const cutCardIndex = (neededCut - 1 + 52) % 52;
+    const cardToBottom = rotatedStack[cutCardIndex];
 
     document.getElementById("result").innerText =
-      `Move "${cardToBottom}" to the bottom to place "${namedCard}" at position ${namedNumber}.`;
+      `Move "${cardToBottom}" (currently at position ${cutCardIndex + 1}) to the bottom to place "${namedCard}" at position ${namedNumber}.`;
   }
 
   fillCardOptions();
