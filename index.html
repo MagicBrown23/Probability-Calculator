@@ -1,47 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AACAAN Calculator</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 500px;
-      margin: 50px auto;
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
+      background-color: #f8f8f8;
+      color: #333;
     }
-    label {
+    label, select, input, button {
       display: block;
-      margin-top: 15px;
-    }
-    select, input {
-      width: 100%;
-      padding: 8px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px;
-      width: 100%;
-      background: #333;
-      color: white;
-      border: none;
+      margin: 10px 0;
       font-size: 16px;
     }
+    button {
+      padding: 8px 16px;
+    }
     .result {
-      margin-top: 25px;
+      margin-top: 20px;
       font-weight: bold;
-      font-size: 18px;
+      color: #007744;
     }
   </style>
 </head>
 <body>
   <h2>AACAAN - Aldo Any Card At Any Number</h2>
 
-  <label>Bottom Card:</label>
+  <label for="bottomCard">Bottom Card:</label>
   <select id="bottomCard"></select>
 
-  <label>Named Card:</label>
+  <label for="namedCard">Named Card:</label>
   <select id="namedCard"></select>
 
-  <label>Named Number (1–52):</label>
+  <label for="namedNumber">Named Number (1–52):</label>
   <input type="number" id="namedNumber" min="1" max="52" />
 
   <button onclick="calculate()">Calculate</button>
@@ -49,64 +43,73 @@
   <div class="result" id="result"></div>
 
   <script>
+    const suits = ['♦', '♣', '♥', '♠'];
+    const suitNames = ['Diamonds', 'Clubs', 'Hearts', 'Spades'];
+    const values = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'];
+
     const mnemonica = [
-      "4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠",
-      "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥",
-      "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣",
-      "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠",
-      "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣",
-      "A♥", "9♦"
+      '4♣', '2♥', '7♦', '3♣', '4♥', '6♦', 'A♠', '5♥', '9♠', '2♠',
+      'Q♥', '3♦', 'Q♣', '8♥', '6♠', '5♠', '9♥', 'K♣', '2♦', 'J♥',
+      '3♠', '8♠', '6♥', '10♣', '5♦', 'K♦', '2♣', '3♥', '8♦', '5♣',
+      'K♠', 'J♦', '8♣', '10♠', 'K♥', 'J♣', '7♠', '10♥', 'A♦', '4♠',
+      '7♥', '4♦', 'A♣', '9♣', 'J♠', 'Q♦', '7♣', 'Q♠', '10♦', '6♣',
+      'A♥', '9♦'
     ];
 
-    const cardOrder = (() => {
-      const suits = ['♦', '♣', '♥', '♠'];
-      const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-      let order = [];
-      for (let s of suits) {
-        for (let v of values) {
-          order.push(`${v}${s}`);
-        }
-      }
-      return order;
-    })();
-
-    // Populate dropdowns
     function populateSelect(id) {
       const select = document.getElementById(id);
-      cardOrder.forEach(card => {
-        const option = document.createElement("option");
-        option.value = card;
-        option.text = card;
-        select.appendChild(option);
-      });
+      for (let s = 0; s < 4; s++) {
+        for (let v = 0; v < 13; v++) {
+          const name = `${values[v]} of ${suitNames[s]}`;
+          const code = `${values[v][0] === '1' ? '10' : values[v][0]}${suits[s]}`;
+          const option = document.createElement('option');
+          option.value = code;
+          option.textContent = name;
+          select.appendChild(option);
+        }
+      }
+    }
+
+    function getPosition(card) {
+      return mnemonica.findIndex(c => c === card) + 1;
+    }
+
+    function encodeCard(card) {
+      const suit = card.slice(-1);
+      const rank = card.slice(0, -1);
+      let suitCode = { '♦': 1, '♣': 2, '♥': 3, '♠': 4 }[suit];
+      let rankCode = {
+        'A': 1, 'J': 11, 'Q': 12, 'K': 13,
+        '10': 10, '2': 2, '3': 3, '4': 4, '5': 5,
+        '6': 6, '7': 7, '8': 8, '9': 9
+      }[rank];
+      return suitCode * 100 + rankCode;
+    }
+
+    function calculate() {
+      const bottomCard = document.getElementById("bottomCard").value;
+      const namedCard = document.getElementById("namedCard").value;
+      const namedNumber = parseInt(document.getElementById("namedNumber").value);
+
+      const namedCardPos = getPosition(namedCard);
+      const bottomCardPos = getPosition(bottomCard);
+
+      if (namedCardPos === 0 || bottomCardPos === 0 || isNaN(namedNumber)) {
+        document.getElementById("result").textContent = "Invalid input. Please try again.";
+        return;
+      }
+
+      const targetOriginalPos = namedCardPos - namedNumber;
+      const cardToCutPos = ((targetOriginalPos - bottomCardPos + 52) % 52) || 52;
+      const cardToCut = mnemonica[targetOriginalPos < 1 ? targetOriginalPos + 52 : targetOriginalPos - 1];
+      const secretCode = encodeCard(cardToCut);
+
+      const result = `The probability of your card in that position is 0.${cardToCutPos.toString().padStart(2, '0')}% and only ${secretCode} out of 10000 people have named this combination.`;
+      document.getElementById("result").textContent = result;
     }
 
     populateSelect("bottomCard");
     populateSelect("namedCard");
-
-    function calculate() {
-      const bottom = document.getElementById("bottomCard").value;
-      const named = document.getElementById("namedCard").value;
-      const namedNum = parseInt(document.getElementById("namedNumber").value, 10);
-
-      const bottomPos = mnemonica.indexOf(bottom) + 1;
-      const namedPos = mnemonica.indexOf(named) + 1;
-
-      if (bottomPos === 0 || namedPos === 0 || isNaN(namedNum)) {
-        document.getElementById("result").innerText = "Please check your inputs.";
-        return;
-      }
-
-      let raw = namedPos - namedNum;
-      if (raw <= 0) raw += 52;
-      const cutCard = mnemonica[raw - 1];
-
-      let cutPos = raw - bottomPos;
-      if (cutPos <= 0) cutPos += 52;
-
-      document.getElementById("result").innerText =
-        `Cut ${cutCard} (now at position ${cutPos}) to the bottom.`;
-    }
   </script>
 </body>
 </html>
