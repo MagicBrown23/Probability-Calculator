@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Probability Positioning Study</title>
+  <title>Studying of card probabilities in specific positions</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -71,14 +71,26 @@
       color: #006644;
       font-weight: bold;
     }
+
+    #lockBtn {
+      margin-top: 15px;
+      background-color: #888;
+    }
+
+    #bottomCardSection.locked {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Probability Positioning Study</h2>
+    <h2>Studying of card probabilities in specific positions</h2>
 
-    <label for="bottomCard">Current Bottom Card:</label>
-    <select id="bottomCard"></select>
+    <div id="bottomCardSection">
+      <label for="bottomCard">Current Bottom Card:</label>
+      <select id="bottomCard"></select>
+      <button id="lockBtn" onclick="lockBottomCard()">Lock Bottom Card</button>
+    </div>
 
     <label for="namedCard">Spectator's Named Card:</label>
     <select id="namedCard"></select>
@@ -104,6 +116,8 @@
       '7♥', '4♦', 'A♣', '9♣', 'J♠', 'Q♦', '7♣', 'Q♠', '10♦', '6♣',
       'A♥', '9♦'
     ];
+
+    let bottomCardValue = null;
 
     function populateSelect(id) {
       const select = document.getElementById(id);
@@ -135,25 +149,40 @@
       return suitCode * 100 + rankCode;
     }
 
+    function lockBottomCard() {
+      bottomCardValue = document.getElementById("bottomCard").value;
+      if (!bottomCardValue) {
+        alert("Please select the bottom card first.");
+        return;
+      }
+      document.getElementById("bottomCardSection").classList.add("locked");
+    }
+
     function calculate() {
-      const bottomCard = document.getElementById("bottomCard").value;
+      if (!bottomCardValue) {
+        document.getElementById("result").textContent = "Please lock the bottom card first.";
+        return;
+      }
+
       const namedCard = document.getElementById("namedCard").value;
       const namedNumber = parseInt(document.getElementById("namedNumber").value);
 
       const namedCardPos = getPosition(namedCard);
-      const bottomCardPos = getPosition(bottomCard);
+      const bottomCardPos = getPosition(bottomCardValue);
 
       if (namedCardPos === 0 || bottomCardPos === 0 || isNaN(namedNumber)) {
         document.getElementById("result").textContent = "Invalid input. Please try again.";
         return;
       }
 
+      // AACAAN LOGIC
       const targetOriginalPos = namedCardPos - namedNumber;
-      const cardToCutPos = ((targetOriginalPos - bottomCardPos + 52) % 52) || 52;
-      const cardToCut = mnemonica[targetOriginalPos < 1 ? targetOriginalPos + 52 : targetOriginalPos - 1];
-      const secretCode = encodeCard(cardToCut);
+      const cutToBottomCard = mnemonica[(targetOriginalPos + 52) % 52];
+      const cutToBottomCardPos = getPosition(cutToBottomCard);
+      const numberToCut = ((cutToBottomCardPos - bottomCardPos + 52) % 52) || 52;
+      const secretCode = encodeCard(cutToBottomCard);
 
-      const result = `The probability of your card in that position is 0.${cardToCutPos.toString().padStart(2, '0')}% and only ${secretCode} out of 10000 people have named this combination.`;
+      const result = `The probability of your card in that position is 0.${numberToCut.toString().padStart(2, '0')}% and only ${secretCode} out of 10000 people have named this combination.`;
       document.getElementById("result").textContent = result;
     }
 
