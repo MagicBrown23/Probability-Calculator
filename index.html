@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ACAAN Mnemonica Cut Helper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+      background: #f9f9f9;
+    }
+    h2 {
+      color: #333;
+    }
+    label, select, input, button {
+      width: 100%;
+      max-width: 300px;
+      margin: 10px 0;
+      font-size: 16px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004999;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #007700;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h2>ACAAN Mnemonica Cut Helper</h2>
+
+<label for="bottomCard">Bottom Card (after spectator's cut):</label>
+<select id="bottomCard"></select>
+
+<label for="namedCard">Named Card:</label>
+<select id="namedCard"></select>
+
+<label for="namedNumber">Named Number (1–52):</label>
+<input type="number" id="namedNumber" min="1" max="52" value="17">
+
+<button onclick="calculateCut()">Calculate Cut</button>
+
+<div id="result"></div>
+
+<script>
+  const stack = [
+    "4♣","2♥","7♦","3♣","4♥","6♦","A♠","5♥","9♠","2♠",
+    "Q♥","3♦","Q♣","8♥","6♠","5♠","9♥","K♣","2♦","J♥",
+    "3♠","8♠","6♥","10♣","5♦","K♦","2♣","3♥","8♦","5♣",
+    "K♠","J♦","8♣","10♠","K♥","J♣","7♠","10♥","A♦","4♠",
+    "7♥","4♦","A♣","9♣","J♠","Q♦","7♣","Q♠","10♦","6♣",
+    "A♥","9♦"
+  ];
+
+  function fillCardOptions() {
+    const bottomSelect = document.getElementById("bottomCard");
+    const namedSelect = document.getElementById("namedCard");
+    stack.forEach(card => {
+      let option1 = document.createElement("option");
+      option1.value = option1.text = card;
+      bottomSelect.add(option1);
+
+      let option2 = document.createElement("option");
+      option2.value = option2.text = card;
+      namedSelect.add(option2);
+    });
+  }
+
+  function mod(n, m) {
+    return ((n % m) + m) % m;
+  }
+
+  function calculateCut() {
+    const bottomCard = document.getElementById("bottomCard").value;
+    const namedCard = document.getElementById("namedCard").value;
+    const namedNumber = parseInt(document.getElementById("namedNumber").value);
+
+    const bottomPos = stack.indexOf(bottomCard) + 1;
+    const namedCardPos = stack.indexOf(namedCard) + 1;
+
+    const cutOffset = bottomPos % 52;
+    const currentNamedCardPos = mod(namedCardPos - cutOffset - 1, 52) + 1;
+    const neededCut = mod(currentNamedCardPos - namedNumber, 52);
+    const cutPointPos = mod(neededCut + cutOffset, 52) + 1;
+    const cutAfterCard = stack[cutPointPos - 1];
+
+    document.getElementById("result").innerText = 
+      `Cut after: ${cutAfterCard} (cut ${neededCut} cards from top to bottom)`;
+  }
+
+  fillCardOptions();
+</script>
+
+</body>
+</html>
