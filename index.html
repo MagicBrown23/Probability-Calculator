@@ -1,193 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Studying of card probabilities in specific positions</title>
+  <title>AACAAN Probability Calculator</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-image: url('https://images.unsplash.com/photo-1526403229780-07f6d2a9b3a0?auto=format&fit=crop&w=1350&q=80');
-      background-size: cover;
-      background-attachment: fixed;
-      background-position: center;
-      color: #222;
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.9);
-      max-width: 600px;
-      margin: 60px auto;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 24px;
-      color: #2d3e50;
-    }
-
-    label {
-      margin-top: 15px;
-      display: block;
-      font-weight: 600;
-    }
-
-    select, input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      margin-top: 25px;
-      width: 100%;
-      background-color: #2d3e50;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #232526, #414345);
       color: white;
-      padding: 12px;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    select, input {
+      margin-top: 5px;
+      padding: 5px;
       font-size: 16px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #1abc9c;
+      color: white;
       border: none;
-      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
-
     button:hover {
-      background-color: #1f2e40;
+      background-color: #16a085;
     }
-
-    .result {
+    #result {
       margin-top: 30px;
       font-size: 18px;
-      text-align: center;
-      color: #006644;
-      font-weight: bold;
+      background-color: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
     }
-
-    #lockBtn {
-      margin-top: 15px;
-      background-color: #888;
-    }
-
-    #bottomCardSection.locked {
+    .hidden {
       display: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Studying of card probabilities in specific positions</h2>
+  <h1>Studying of card probabilities in specific positions</h1>
 
-    <div id="bottomCardSection">
-      <label for="bottomCard">Current Bottom Card:</label>
-      <select id="bottomCard"></select>
-      <button id="lockBtn" onclick="lockBottomCard()">Lock Bottom Card</button>
-    </div>
-
-    <label for="namedCard">Spectator's Named Card:</label>
-    <select id="namedCard"></select>
-
-    <label for="namedNumber">Named Number (1–52):</label>
-    <input type="number" id="namedNumber" min="1" max="52" placeholder="e.g. 17" />
-
-    <button onclick="calculate()">Calculate</button>
-
-    <div class="result" id="result"></div>
+  <div id="bottomCardSection">
+    <label for="bottomCard">Select the current bottom card:</label>
+    <select id="bottomCard" onchange="hideBottomCard()"></select>
   </div>
 
-  <script>
-    const suits = ['♦', '♣', '♥', '♠'];
-    const suitNames = ['Diamonds', 'Clubs', 'Hearts', 'Spades'];
-    const values = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'];
+  <label for="namedCard">Select the named card:</label>
+  <select id="namedCard"></select>
 
+  <label for="namedNumber">Enter the named number (1–52):</label>
+  <input type="number" id="namedNumber" min="1" max="52">
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div id="result"></div>
+
+  <script>
     const mnemonica = [
-      '4♣', '2♥', '7♦', '3♣', '4♥', '6♦', 'A♠', '5♥', '9♠', '2♠',
-      'Q♥', '3♦', 'Q♣', '8♥', '6♠', '5♠', '9♥', 'K♣', '2♦', 'J♥',
-      '3♠', '8♠', '6♥', '10♣', '5♦', 'K♦', '2♣', '3♥', '8♦', '5♣',
-      'K♠', 'J♦', '8♣', '10♠', 'K♥', 'J♣', '7♠', '10♥', 'A♦', '4♠',
-      '7♥', '4♦', 'A♣', '9♣', 'J♠', 'Q♦', '7♣', 'Q♠', '10♦', '6♣',
-      'A♥', '9♦'
+      "4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠",
+      "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥",
+      "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣",
+      "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠",
+      "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣",
+      "A♥", "9♦"
     ];
 
-    let bottomCardValue = null;
+    const suits = ["♦", "♣", "♥", "♠"];
+    const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
-    function populateSelect(id) {
-      const select = document.getElementById(id);
-      for (let s = 0; s < 4; s++) {
-        for (let v = 0; v < 13; v++) {
-          const name = `${values[v]} of ${suitNames[s]}`;
-          const code = `${values[v][0] === '1' ? '10' : values[v][0]}${suits[s]}`;
-          const option = document.createElement('option');
-          option.value = code;
-          option.textContent = name;
+    const namedCardSelect = document.getElementById("namedCard");
+    const bottomCardSelect = document.getElementById("bottomCard");
+
+    let storedBottomCard = null; // This holds the hidden bottom card after selection
+
+    function populateCards(select) {
+      for (let s = 0; s < suits.length; s++) {
+        for (let v = 0; v < values.length; v++) {
+          let card = values[v] + suits[s];
+          let option = document.createElement("option");
+          option.value = card;
+          option.text = card;
           select.appendChild(option);
         }
       }
     }
 
-    function getPosition(card) {
-      return mnemonica.findIndex(c => c === card) + 1;
+    populateCards(namedCardSelect);
+    populateCards(bottomCardSelect);
+
+    function cardToMnemonicaPos(card) {
+      return mnemonica.indexOf(card) + 1;
     }
 
-    function encodeCard(card) {
-      const suit = card.slice(-1);
-      const rank = card.slice(0, -1);
-      let suitCode = { '♦': 1, '♣': 2, '♥': 3, '♠': 4 }[suit];
-      let rankCode = {
-        'A': 1, 'J': 11, 'Q': 12, 'K': 13,
-        '10': 10, '2': 2, '3': 3, '4': 4, '5': 5,
-        '6': 6, '7': 7, '8': 8, '9': 9
-      }[rank];
+    function cardToSecretCode(card) {
+      let suitChar = card.slice(-1);
+      let rankStr = card.slice(0, -1);
+      let suitCode = { "♦": 1, "♣": 2, "♥": 3, "♠": 4 }[suitChar];
+      let rankCode = { "A": 1, "J": 11, "Q": 12, "K": 13 }[rankStr] || parseInt(rankStr);
       return suitCode * 100 + rankCode;
     }
 
-    function lockBottomCard() {
-      bottomCardValue = document.getElementById("bottomCard").value;
-      if (!bottomCardValue) {
-        alert("Please select the bottom card first.");
-        return;
-      }
-      document.getElementById("bottomCardSection").classList.add("locked");
+    function hideBottomCard() {
+      storedBottomCard = bottomCardSelect.value;
+      document.getElementById("bottomCardSection").classList.add("hidden");
     }
 
     function calculate() {
-      if (!bottomCardValue) {
-        document.getElementById("result").textContent = "Please lock the bottom card first.";
-        return;
-      }
-
-      const namedCard = document.getElementById("namedCard").value;
+      const namedCard = namedCardSelect.value;
       const namedNumber = parseInt(document.getElementById("namedNumber").value);
 
-      const namedCardPos = getPosition(namedCard);
-      const bottomCardPos = getPosition(bottomCardValue);
-
-      if (namedCardPos === 0 || bottomCardPos === 0 || isNaN(namedNumber)) {
-        document.getElementById("result").textContent = "Invalid input. Please try again.";
+      if (!namedCard || !storedBottomCard || isNaN(namedNumber)) {
+        document.getElementById("result").innerText = "Please complete all inputs.";
         return;
       }
 
-      // AACAAN LOGIC
-      const targetOriginalPos = namedCardPos - namedNumber;
-      const cutToBottomCard = mnemonica[(targetOriginalPos + 52) % 52];
-      const cutToBottomCardPos = getPosition(cutToBottomCard);
-      const numberToCut = ((cutToBottomCardPos - bottomCardPos + 52) % 52) || 52;
-      const secretCode = encodeCard(cutToBottomCard);
+      const namedPos = cardToMnemonicaPos(namedCard);
+      const bottomPos = cardToMnemonicaPos(storedBottomCard);
 
-      const result = `The probability of your card in that position is 0.${numberToCut.toString().padStart(2, '0')}% and only ${secretCode} out of 10000 people have named this combination.`;
-      document.getElementById("result").textContent = result;
+      let targetPos = namedPos - namedNumber;
+      if (targetPos < 1) targetPos += 52;
+
+      const targetCard = mnemonica[targetPos - 1];
+
+      let finalPos = targetPos - bottomPos;
+      if (finalPos < 1) finalPos += 52;
+
+      const probability = (finalPos < 10 ? "0" : "") + finalPos;
+      const secretCode = cardToSecretCode(targetCard);
+
+      document.getElementById("result").innerText =
+        `The probability of your card in that position is 0.${probability}% and only ${secretCode} out of 10000 people have named this combination`;
     }
-
-    populateSelect("bottomCard");
-    populateSelect("namedCard");
   </script>
 </body>
 </html>
