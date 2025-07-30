@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Study of Card Probabilities in Specific Position</title>
+  <title>Studying of card probabilities in specific positions</title>
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
@@ -29,6 +29,7 @@
     button {
       background-color: #4CAF50;
       color: white;
+      cursor: pointer;
     }
     #result {
       margin-top: 20px;
@@ -48,7 +49,7 @@
   </style>
 </head>
 <body>
-  <h1>Study of Card Probabilities in Specific Position</h1>
+  <h1>Studying of card probabilities in specific positions</h1>
 
   <div id="bottomCardSection">
     <label for="bottomCard">Enter bottom card:</label><br>
@@ -80,21 +81,26 @@
     const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
     function populateSelects() {
-      const options = [];
+      const fullDeck = [];
       for (let suit of suits) {
         for (let rank of ranks) {
-          options.push(`${rank}${suit}`);
+          fullDeck.push(`${rank}${suit}`);
         }
       }
-        // For bottomCard: insert "?" as first option
-      const bottomSelect = document.getElementById('bottomCard');
-      bottomSelect.innerHTML = `<option value="" disabled selected>?</option>` +
-        options.map(card => `<option value="${card}">${card}</option>`).join('');
 
-      // For namedCard: standard options
+      // Bottom card select: start with "?" then Ace of Diamonds, then rest (excluding A♦ again)
+      const bottomSelect = document.getElementById('bottomCard');
+      let bottomOptions = `<option value="" disabled selected>?</option>`;
+      bottomOptions += `<option value="A♦">A♦</option>`;
+      bottomOptions += fullDeck
+        .filter(card => card !== "A♦")
+        .map(card => `<option value="${card}">${card}</option>`)
+        .join('');
+      bottomSelect.innerHTML = bottomOptions;
+
+      // Named card: normal full deck
       const namedSelect = document.getElementById('namedCard');
-      namedSelect.innerHTML = options.map(card => `<option value="${card}">${card}</option>`).join('');
-  
+      namedSelect.innerHTML = fullDeck.map(card => `<option value="${card}">${card}</option>`).join('');
     }
 
     function getMnemonicaIndex(card) {
@@ -114,8 +120,8 @@
       const namedNumber = parseInt(document.getElementById('namedNumber').value);
       const bottomCard = window._hiddenBottomCard;
 
-      if (!namedCard || !namedNumber || !bottomCard) {
-        document.getElementById('result').innerText = "Please fill all fields.";
+      if (!namedCard || isNaN(namedNumber) || !bottomCard || bottomCard === "") {
+        document.getElementById('result').innerText = "Please fill all fields correctly.";
         return;
       }
 
@@ -132,10 +138,12 @@
 
     function hideBottomCard() {
       const card = document.getElementById('bottomCard').value;
-      window._hiddenBottomCard = card;
-      const section = document.getElementById('bottomCardSection');
-      section.style.opacity = 0;
-      section.style.visibility = "hidden";
+      if (card !== "") {
+        window._hiddenBottomCard = card;
+        const section = document.getElementById('bottomCardSection');
+        section.style.opacity = 0;
+        section.style.visibility = "hidden";
+      }
     }
 
     populateSelects();
