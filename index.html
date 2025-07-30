@@ -86,9 +86,15 @@
           options.push(`${rank}${suit}`);
         }
       }
-      for (let id of ['bottomCard', 'namedCard']) {
-        const select = document.getElementById(id);
-        select.innerHTML = options.map(card => `<option value="${card}">${card}</option>`).join('');
+        // For bottomCard: insert "?" as first option
+      const bottomSelect = document.getElementById('bottomCard');
+      bottomSelect.innerHTML = `<option value="" disabled selected>?</option>` +
+        options.map(card => `<option value="${card}">${card}</option>`).join('');
+
+      // For namedCard: standard options
+      const namedSelect = document.getElementById('namedCard');
+      namedSelect.innerHTML = options.map(card => `<option value="${card}">${card}</option>`).join('');
+  
       }
     }
 
