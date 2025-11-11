@@ -31,6 +31,9 @@
       color: white;
       cursor: pointer;
     }
+    #micButton {
+      background-color: #ff4081;
+    }
     #result {
       margin-top: 20px;
       font-size: 1.1em;
@@ -54,6 +57,7 @@
   <div id="bottomCardSection">
     <label for="bottomCard">Enter bottom card:</label><br>
     <select id="bottomCard" onchange="hideBottomCard()"></select>
+    <button id="micButton" onclick="startVoiceInput()">🎙️ Speak Bottom Card</button>
   </div>
 
   <br>
@@ -88,7 +92,6 @@
         }
       }
 
-      // Bottom card select: start with "?" then Ace of Diamonds, then rest (excluding A♦ again)
       const bottomSelect = document.getElementById('bottomCard');
       let bottomOptions = `<option value="" disabled selected>?</option>`;
       bottomOptions += `<option value="A♦">A♦</option>`;
@@ -98,7 +101,6 @@
         .join('');
       bottomSelect.innerHTML = bottomOptions;
 
-      // Named card: normal full deck
       const namedSelect = document.getElementById('namedCard');
       namedSelect.innerHTML = fullDeck.map(card => `<option value="${card}">${card}</option>`).join('');
     }
@@ -144,6 +146,50 @@
         section.style.opacity = 0;
         section.style.visibility = "hidden";
       }
+    }
+
+    function startVoiceInput() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Sorry, your browser doesn't support speech recognition.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+      document.getElementById('micButton').innerText = "🎙️ Listening...";
+
+      recognition.onresult = (event) => {
+        const speech = event.results[0][0].transcript.toLowerCase().trim();
+        const rankMap = {
+          'ace': 'A', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+          'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10',
+          'jack': 'J', 'queen': 'Q', 'king': 'K'
+        };
+        const suitMap = {
+          'clubs': '♣', 'hearts': '♥', 'diamonds': '♦', 'spades': '♠'
+        };
+
+        let foundRank = Object.keys(rankMap).find(r => speech.includes(r));
+        let foundSuit = Object.keys(suitMap).find(s => speech.includes(s));
+        if (foundRank && foundSuit) {
+          const card = rankMap[foundRank] + suitMap[foundSuit];
+          document.getElementById('bottomCard').value = card;
+          hideBottomCard();
+        } else {
+          alert(`Could not recognize a valid card from: "${speech}"`);
+        }
+
+        document.getElementById('micButton').innerText = "🎙️ Speak Bottom Card";
+      };
+
+      recognition.onerror = () => {
+        document.getElementById('micButton').innerText = "🎙️ Speak Bottom Card";
+        alert("Voice recognition failed. Try again.");
+      };
     }
 
     populateSelects();
